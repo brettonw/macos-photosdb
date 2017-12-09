@@ -64,7 +64,7 @@
         font-size: 10px;
 		height: 22px;
     }
-	
+
 	.bedrock-database-entry {
         display: inline-block;
 	}
@@ -136,7 +136,7 @@
 		// collapse any spaces
 		return name.replace (/ /g, "-").toLowerCase ();
 	};
-	
+
     let Http = Bedrock.Http;
     let Html = Bedrock.Html;
     let now = new Date ().getTime ();
@@ -196,10 +196,9 @@
             let divs = view.children;
             for (let i = 0, end = divs.length; i < end; ++i) {
                 let div = divs[i];
+                Html.removeAllChildren (div);
                 if (scrolledIntoView (div, view) ) {
                     populatePage (div);
-                } else {
-                    Html.removeAllChildren (div);
                 }
             }
         };
