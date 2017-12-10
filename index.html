@@ -188,33 +188,65 @@
         let scrolledIntoView = function (element, list) {
             let height = list.clientHeight;
             let halfHeight = height / 2;
-            let coords = element.getBoundingClientRect();
+            let coords = element.getBoundingClientRect ();
             return (coords.bottom >= -halfHeight) && (coords.top <= (height + halfHeight));
-        };
-
-        let scrollView = function (view) {
-            let divs = view.children;
-            for (let i = 0, end = divs.length; i < end; ++i) {
-                let div = divs[i];
-                Html.removeAllChildren (div);
-                if (scrolledIntoView (div, view) ) {
-                    populatePage (div);
-                }
-            }
         };
 
         // deal with displaying the database
         let currentDb;
+        let recordCount;
+        const displayLineSize = 22;
+        const pageSize = Math.floor (bedrockDatabaseDisplayList.offsetHeight / displayLineSize) * 2;
+        const pageHeight = displayLineSize * pageSize;
+        let pageCount;
+
+        let pageIsInView = function (page, view) {
+            let pageInfo = page.id.split (/-/);
+            let start = (parseInt (pageInfo[1]) * displayLineSize) - view.scrollTop;
+            let end = (parseInt (pageInfo[2]) * displayLineSize) - view.scrollTop;
+            return (end >= 0) && (start <= view.clientHeight);
+        };
+
+        let lastVisiblePages = [];
+
+        let scrollView = function (view) {
+            let visibleViews = [];
+
+            // clear the lastVisiblePages
+            for (let page of lastVisiblePages) {
+                if (pageIsInView (page, view)) {
+                    visibleViews.push (page);
+                } else {
+                    Html.removeAllChildren (page);
+                }
+            }
+
+            // figure out which pages to make visible
+            let start = Math.floor (view.scrollTop / pageHeight);
+            let end = Math.min (pageCount, start + 2);
+            let pages = view.children;
+            for (let page of pages) {
+                if (pageIsInView (page, view)) {
+                    visibleViews.push (page);
+                    if (page.children.length == 0) {
+                        populatePage (page);
+                    }
+                }
+            }
+
+            // reset the visible pages for the next time
+            lastVisiblePages = visibleViews;
+        };
 
         // function to populate a page
         let populatePage = function (pageElement) {
             let pageInfo = pageElement.id.split (/-/);
-            let start = pageInfo[1];
-            let end = pageInfo[2];
-            for (let i = start; i < end; ++i) {
+            let start = parseInt (pageInfo[1]);
+            let end = parseInt (pageInfo[2]);
+            for (let j = start; j < end; ++j) {
                 try {
-                    let record = currentDb[i];
-                    let lineElement = Html.addElement(pageElement, "div", {classes: ((i & 0x01) == 1) ? ["bedrock-database-line", "odd"] : ["bedrock-database-line"]});
+                    let record = currentDb[j];
+                    let lineElement = Html.addElement(pageElement, "div", {classes: ((j & 0x01) == 1) ? ["bedrock-database-line", "odd"] : ["bedrock-database-line"]});
                     for (let key of fieldKeys) {
                         let value = (key in record) ? record[key] : "";
                         let styleName = makeStyleNameFromColumnName(key);
@@ -240,10 +272,8 @@
 
                 // build out the paging flow, computing the page height such that it would be impossible to have more than 2
                 // pages visible at any one time
-                let recordCount = currentDb.length;
-                const displayLineSize = 22;
-                let pageSize = Math.floor (bedrockDatabaseDisplayList.offsetHeight / displayLineSize) * 2;
-                let pageCount = Math.floor (recordCount / pageSize) + (((recordCount % pageSize) > 0) ? 1 : 0);
+                recordCount = currentDb.length;
+                pageCount = Math.floor (recordCount / pageSize) + (((recordCount % pageSize) > 0) ? 1 : 0);
 
                 // loop over all of the records, page by page
                 for (let pageIndex = 0; pageIndex < pageCount; ++pageIndex) {
