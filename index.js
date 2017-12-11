@@ -66,7 +66,72 @@ Http.get ("images-subset.json?" + now, function (records) {
         }
     }
 
-    records = SimpleDatabase.sort (records, [ { name:"Date", type:"string", asc:true },  { name:"Time", type:"string", asc:true }, { name: "Width", type:"number", asc:true }, { name: "Height", type:"number", asc:true }, { name: "Size", type:"string", asc:true }, { name: "Name", type:"string", asc:true } ]);
+    // set up to sort the database
+    let CompareFunctions = Bedrock.CompareFunctions;
+    let FieldComparable = function () {
+        let _ = Object.create(Bedrock.Base);
+
+        _.init = function (parameters) {
+            this.compareFunction = CompareFunctions.get (parameters.type);
+            this.asc = parameters.asc;
+            this.name = parameters.name;
+            return this;
+        };
+
+        _.compare = function (recordA, recordB) {
+            return this.compareFunction (recordA[this.name], recordB[this.name], this.asc);
+        };
+
+        return _;
+    } ();
+
+    let RecordComparable = function () {
+        let _ = Object.create(Bedrock.Base);
+
+        _.init = function (parameters) {
+            let fc = this.fieldComparables = [];
+            for (let field of parameters.fields) {
+                fc.push (FieldComparable.new (field));
+            }
+            return this;
+        };
+
+        _.compare = function (recordA, recordB) {
+            for (let fieldComparable of this.fieldComparables) {
+                let sortResult = fieldComparable.compare (recordA, recordB);
+                if (sortResult != 0) {
+                    return sortResult;
+                }
+            }
+            return 0;
+        };
+
+        return _;
+    } ();
+
+    let sort = function (records, recordComparable) {
+        let newRecords = records.slice ();
+        newRecords.sort (function (recordA, recordB) {
+            return recordComparable.compare (recordA, recordB);
+        });
+        return newRecords;
+    };
+
+    let recordComparable = RecordComparable.new ({ fields:[
+            { name:"Date", asc:true, type: CompareFunctions.ALPHABETIC },
+            { name:"Time", asc:true, type: CompareFunctions.ALPHABETIC },
+            { name:"Width", asc:true, type: CompareFunctions.NUMERIC },
+            { name:"Height", asc:true, type: CompareFunctions.NUMERIC },
+            { name:"Size", asc:true, type: CompareFunctions.ALPHABETIC },
+            { name:"Name", asc:true, type: CompareFunctions.ALPHABETIC }
+        ] } );
+
+    records = sort (records, recordComparable);
+
+    // identify potential duplicates
+    for (let i = 1, end = records.length; i < end; ++i) {
+        //if (rec
+    }
 
     // add a header row from the fields
     let fieldKeys = Object.keys (fields).sort();
