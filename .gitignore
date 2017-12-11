@@ -13,3 +13,6 @@ buildNumber.properties
 
 *.json
 .idea/
+
+.DS_Store
+__MACOSX

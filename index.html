@@ -62,15 +62,16 @@
         padding: 4px;
         color: black;
         font-size: 10px;
-		height: 22px;
+		height: 64px;
     }
 
 	.bedrock-database-entry {
         display: inline-block;
+        height: 100%;
 	}
 
 	.bedrock-database-entry-text {
-		height: 14px;
+		height: calc(100% - 8px);
 		line-height: 14px;
 		overflow-x: hidden;
 		overflow-y: hidden;
@@ -82,41 +83,71 @@
         width: 100px;
         text-align: center;
     }
-    .width{
+
+    .width {
         width: 40px;
         text-align: center;
     }
-    .height{
+
+    .height {
         width: 40px;
         text-align: center;
     }
+
+    .thumbnail {
+        max-height: 100%;
+    }
+
+    .rotate90CW {
+        transform: rotate(90deg);
+    }
+
+    .rotate180 {
+        transform: rotate(180deg);
+    }
+
+    .rotate270CW {
+        transform: rotate(270deg);
+    }
+
     .size{
         width: 50px;
         text-align: center;
     }
+
     .type{
         width: 40px;
         text-align: center;
     }
-    .name{
+
+    .name {
         width: 100px;
     }
+
+    .file {
+        width: 100px;
+    }
+
     .make{
         width: 80px;
         text-align: center;
     }
+
     .model{
         width: 60px;
         text-align: center;
     }
+
     .exp{
         width: 50px;
         text-align: center;
     }
+
     .f-stop{
         width: 40px;
         text-align: center;
     }
+
     .iso{
         width: 40px;
         text-align: center;
@@ -152,7 +183,10 @@
             "FileTypeExtension": "Type",
             "FileName": "Name",
             "ExposureTime": "Exp",
-            "FNumber": "f-stop"
+            "FNumber": "f-stop",
+            "GPSLatitude": "Latitude",
+            "GPSLongitude": "Longitude",
+            "GPSAltitude": "Altitude"
         };
 
         // identify all the fields
@@ -195,7 +229,7 @@
         // deal with displaying the database
         let currentDb;
         let recordCount;
-        const displayLineSize = 22;
+        const displayLineSize = 64;
         const pageSize = Math.floor (bedrockDatabaseDisplayList.offsetHeight / displayLineSize) * 2;
         const pageHeight = displayLineSize * pageSize;
         let pageCount;
@@ -252,6 +286,31 @@
                         let styleName = makeStyleNameFromColumnName(key);
                         let entryElement = Html.addElement(lineElement, "div", {class: "bedrock-database-entry"});
                         Html.addElement(entryElement, "div", {classes: [styleName, "bedrock-database-entry-text"]}).innerHTML = value;
+                    }
+
+                    // add a file link
+                    let entryElement = Html.addElement (lineElement, "div", { class: "bedrock-database-entry" });
+                    let linkDivElement = Html.addElement (entryElement, "div", { classes: ["file", "bedrock-database-entry-text"] });
+                    let fileName = record["File"].substr (2);
+                    let linkElement = Html.addElement (linkDivElement, "a", { href: "/photosdb-images/Masters/" + fileName });
+                    let thumbnailFileName = "/photosdb-images/Thumbnails/" + fileName;
+                    if ("Orientation" in record) {
+                        switch (record.Orientation) {
+                            case "Horizontal (normal)":
+                                Html.addElement (linkElement, "img", { src: thumbnailFileName, class: "thumbnail" });
+                                break;
+                            case "Rotate 90 CW":
+                                Html.addElement (linkElement, "img", { src: thumbnailFileName, classes: ["thumbnail", "rotate90CW"] });
+                                break;
+                            case "Rotate 180":
+                                Html.addElement (linkElement, "img", { src: thumbnailFileName, classes: ["thumbnail", "rotate180"] });
+                                break;
+                            case "Rotate 270 CW":
+                                Html.addElement (linkElement, "img", { src: thumbnailFileName, classes: ["thumbnail", "rotate270CW"] });
+                                break;
+                        }
+                    } else {
+                        Html.addElement (linkElement, "img", { src: thumbnailFileName, class: "thumbnail" });
                     }
                 } catch (exception) {
                     console.log(exception);
