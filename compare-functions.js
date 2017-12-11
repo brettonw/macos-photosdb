@@ -1,3 +1,5 @@
+"use strict;"
+
 // CompareFunctions are interfaces that take two values (a, b), and return a number as
 // follows:
 //     a < b : negative
@@ -13,72 +15,73 @@ Bedrock.CompareFunctions = function () {
     _.AUTO = "auto";
     _.WILDCARD = "*";
 
-    let compareNumeric = function (a, b, asc) {
+    let compareNumeric = function (a, b, ascending) {
         // compare the values as numeric entities
-        return asc ? (a - b) : (b - a)
+        return ascending ? (a - b) : (b - a);
     };
 
-    _.numeric = function (a, b, asc) {
+    _.numeric = function (a, b, ascending) {
         // boilerplate null check
-        if ((typeof (a) === "undefined") || (a == null)) {
-            return ((typeof (b) !== "undefined") && (b != null)) ? (asc ? -1 : 1) : 0;
+        if ((a === undefined) || (a === null)) {
+            return ((b !== undefined) && (b !== null)) ? (ascending ? -1 : 1) : 0;
         }
-        if ((typeof (b) === "undefined") || (b == null)) {
-            return (asc ? 1 : -1);
+        if ((b === undefined) || (b === null)) {
+            return (ascending ? 1 : -1);
         }
 
-        return compareNumeric (a, b, asc);
+        return compareNumeric (a, b, ascending);
     };
 
-    let compareAlphabetic = function (a, b, asc) {
+    let compareAlphabetic = function (a, b, ascending) {
         // compare case-insensitive strings with no spaces
         let ra = a.replace (/\s*/g, "").toLowerCase ();
         let rb = b.replace (/\s*/g, "").toLowerCase ();
-        return asc ? ra.localeCompare (rb) : rb.localeCompare (ra);
+        return ascending ? ra.localeCompare (rb) : rb.localeCompare (ra);
     };
 
-    _.alphabetic = function (a, b, asc) {
+    _.alphabetic = function (a, b, ascending) {
         // boilerplate null check
-        if ((typeof (a) === "undefined") || (a == null)) {
-            return ((typeof (b) !== "undefined") && (b != null)) ? (asc ? -1 : 1) : 0;
+        if ((a === undefined) || (a === null)) {
+            return ((b !== undefined) && (b !== null)) ? (ascending ? -1 : 1) : 0;
         }
-        if ((typeof (b) === "undefined") || (b == null)) {
-            return (asc ? 1 : -1);
+        if ((b === undefined) || (b === null)) {
+            return (ascending ? 1 : -1);
         }
 
-        return compareAlphabetic (a, b, asc);
+        return compareAlphabetic (a, b, ascending);
     };
 
-    _.date = function (a, b, asc) {
+    _.chronologic = function (a, b, ascending) {
         // boilerplate null check
-        if ((typeof (a) === "undefined") || (a == null)) {
-            return ((typeof (b) !== "undefined") && (b != null)) ? (asc ? -1 : 1) : 0;
+        if ((a === undefined) || (a === null)) {
+            return ((b !== undefined) && (b !== null)) ? (ascending ? -1 : 1) : 0;
         }
-        if ((typeof (b) === "undefined") || (b == null)) {
-            return (asc ? 1 : -1);
+        if ((b === undefined) || (b === null)) {
+            return (ascending ? 1 : -1);
         }
 
         // convert the dates/timestamps to numerical values for comparison
         return compareNumeric (new Date (a).valueOf (), new Date (b).valueOf ());
     };
 
-    _.auto = function (a, b, asc) {
+    _.auto = function (a, b, ascending) {
         // boilerplate null check
-        if ((typeof (a) === "undefined") || (a == null)) {
-            return ((typeof (b) !== "undefined") && (b != null)) ? (asc ? -1 : 1) : 0;
+        if ((a === undefined) || (a === null)) {
+            return ((b !== undefined) && (b !== null)) ? (ascending ? -1 : 1) : 0;
         }
-        if ((typeof (b) === "undefined") || (b == null)) {
-            return (asc ? 1 : -1);
+        if ((b === undefined) || (b === null)) {
+            return (ascending ? 1 : -1);
         }
 
         // try to compare the values as numerical if we can
-        let na = Number (a), nb = Number (b);
-        if ((na == a.toString ()) && (nb == b.toString ())) {
-            return compareNumeric (na, nb, asc);
+        let na = Number (a).toString ();
+        let nb = Number (b).toString ();
+        if ((na === a.toString ()) && (nb === b.toString ())) {
+            return compareNumeric (na, nb, ascending);
         }
 
         // otherwise do it alphabetic
-        return compareAlphabetic (a, b, asc);
+        return compareAlphabetic (a, b, ascending);
     };
 
     _.get = function (type) {
@@ -96,7 +99,7 @@ Bedrock.CompareFunctions = function () {
             case _.CHRONOLOGIC:
             case "date":
             case "timestamp":
-                return this.date;
+                return this.chronologic;
 
             case _.AUTO:
             case "any":
@@ -106,8 +109,8 @@ Bedrock.CompareFunctions = function () {
         throw "Unknown type (" + type + ")";
     };
 
-    _.compare = function (a, b, asc, type) {
-        return this.get (type) (a, b, asc);
+    _.compare = function (a, b, ascending, type) {
+        return this.get (type) (a, b, ascending);
     };
 
     _.mask = function (compareResult) {

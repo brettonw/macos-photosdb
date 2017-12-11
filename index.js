@@ -1,3 +1,5 @@
+"use strict;"
+
 let makeStyleNameFromColumnName = function (name) {
     // collapse any spaces
     return name.replace (/ /g, "-").toLowerCase ();
@@ -45,7 +47,7 @@ Http.get ("images-subset.json?" + now, function (records) {
                 break;
             }
         }
-        if (typeof (dateTime) === "undefined") {
+        if (dateTime === undefined) {
             // try to set a date from the directory name
             let d = record["Directory"].split ("/")[4].split("-");
             if (d.length == 2) {
@@ -57,76 +59,21 @@ Http.get ("images-subset.json?" + now, function (records) {
                 }
             }
         }
-        if (typeof (dateTime) !== "undefined") {
-            dateTime = dateTime.split (" ");
-            record["Date"] = dateTime[0].replace (/:/g, "/");
-            record["Time"] = dateTime[1];
-        } else {
-            console.log("No date found for " + record["Directory"] + "/" + record["Name"]);
-        }
+        dateTime = dateTime.split (" ");
+        record["Date"] = dateTime[0].replace (/:/g, "/");
+        record["Time"] = dateTime[1];
     }
 
     // set up to sort the database
-    let CompareFunctions = Bedrock.CompareFunctions;
-    let FieldComparable = function () {
-        let _ = Object.create(Bedrock.Base);
-
-        _.init = function (parameters) {
-            this.compareFunction = CompareFunctions.get (parameters.type);
-            this.asc = parameters.asc;
-            this.name = parameters.name;
-            return this;
-        };
-
-        _.compare = function (recordA, recordB) {
-            return this.compareFunction (recordA[this.name], recordB[this.name], this.asc);
-        };
-
-        return _;
-    } ();
-
-    let RecordComparable = function () {
-        let _ = Object.create(Bedrock.Base);
-
-        _.init = function (parameters) {
-            let fc = this.fieldComparables = [];
-            for (let field of parameters.fields) {
-                fc.push (FieldComparable.new (field));
-            }
-            return this;
-        };
-
-        _.compare = function (recordA, recordB) {
-            for (let fieldComparable of this.fieldComparables) {
-                let sortResult = fieldComparable.compare (recordA, recordB);
-                if (sortResult != 0) {
-                    return sortResult;
-                }
-            }
-            return 0;
-        };
-
-        return _;
-    } ();
-
-    let sort = function (records, recordComparable) {
-        let newRecords = records.slice ();
-        newRecords.sort (function (recordA, recordB) {
-            return recordComparable.compare (recordA, recordB);
-        });
-        return newRecords;
-    };
-
-    let recordComparable = RecordComparable.new ({ fields:[
-            { name:"Date", asc:true, type: CompareFunctions.ALPHABETIC },
-            { name:"Time", asc:true, type: CompareFunctions.ALPHABETIC },
-            { name:"Width", asc:true, type: CompareFunctions.NUMERIC },
-            { name:"Height", asc:true, type: CompareFunctions.NUMERIC },
-            { name:"Size", asc:true, type: CompareFunctions.ALPHABETIC },
-            { name:"Name", asc:true, type: CompareFunctions.ALPHABETIC }
-        ] } );
-
-    records = sort (records, recordComparable);
+    let CF = Bedrock.CompareFunctions;
+    records = Bedrock.DatabaseOperations.Sort.new ({ fields:[
+            { name:"Date", asc:true, type: CF.ALPHABETIC },
+            { name:"Time", asc:true, type: CF.ALPHABETIC },
+            { name:"Width", asc:true, type: CF.NUMERIC },
+            { name:"Height", asc:true, type: CF.NUMERIC },
+            { name:"Size", asc:true, type: CF.ALPHABETIC },
+            { name:"Name", asc:true, type: CF.ALPHABETIC }
+        ] }).perform (records);
 
     // identify potential duplicates
     for (let i = 1, end = records.length; i < end; ++i) {
