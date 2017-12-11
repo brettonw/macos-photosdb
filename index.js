@@ -64,7 +64,7 @@ Http.get ("images-subset.json?" + now, function (records) {
         record["Time"] = dateTime[1];
     }
 
-    // set up to sort the database
+    // sort the database
     let CF = Bedrock.CompareFunctions;
     records = Bedrock.DatabaseOperations.Sort.new ({ fields:[
             { name:"Date", asc:true, type: CF.ALPHABETIC },
@@ -76,8 +76,21 @@ Http.get ("images-subset.json?" + now, function (records) {
         ] }).perform (records);
 
     // identify potential duplicates
+    let recordComparable = Bedrock.Comparable.RecordComparable.new ({ fields:[
+            { name:"Date", asc:true, type: CF.ALPHABETIC },
+            { name:"Time", asc:true, type: CF.ALPHABETIC },
+            { name:"Width", asc:true, type: CF.NUMERIC },
+            { name:"Height", asc:true, type: CF.NUMERIC },
+            { name:"Size", asc:true, type: CF.ALPHABETIC }
+        ] });
     for (let i = 1, end = records.length; i < end; ++i) {
-        //if (rec
+        let recordA = records[i - 1];
+        let recordB = records[i];
+        if (recordComparable.compare (records[i - 1], records[i]) == 0) {
+            // tag the second as a duplicate of the first
+            recordB["Duplicate"] = { Directory: recordA["Directory"], Name: recordA["Name"] };
+            fields["Duplicate"] = "Duplicate";
+        }
     }
 
     // add a header row from the fields
