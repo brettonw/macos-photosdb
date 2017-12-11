@@ -6,7 +6,7 @@ mongoimport --drop --db photosdb --collection exif --file images.json --jsonArra
 rm -f images.json
 
 # export the desired fields
-EXPORT_FIELDS="Orientation,GPSLatitude,GPSLongitude,GPSAltitude,SourceFile,FileName,FileSize,FileTypeExtension,ImageWidth,ImageHeight,Make,Model,ExposureTime,FNumber,CreateDate,ISO";
+EXPORT_FIELDS="GPSDateTime,SubSecCreateDate,CreateDate,GPSLatitude,GPSLongitude,GPSAltitude,Directory,FileName,FileSize,FileTypeExtension,Orientation,ImageWidth,ImageHeight,Make,Model,ExposureTime,FNumber,ISO";
 mongoexport --db photosdb --collection exif  --fields "$EXPORT_FIELDS" --out images-subset.json --jsonArray
 
 # zip up the response for archiving

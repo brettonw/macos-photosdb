@@ -1,0 +1,144 @@
+div[id="bedrock-database-container"] {
+    display: inline-block;
+    font-family: sans-serif;
+    text-align: left;
+    padding: 4px 0px;
+    width: 100%;
+}
+
+div[id="bedrock-database-display"] {
+    height: 500px;
+    border: solid;
+    border-width: 1px;
+    border-radius: 2px;
+    border-color: #bbb;
+}
+
+div[id="bedrock-header-line"] {
+    padding: 4px;
+    height:26px;
+    border: solid;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-color: #999;
+}
+
+.bedrock-header-entry {
+    display: inline-block;
+}
+
+.bedrock-header-entry-text {
+    font-size: 12px;
+    font-weight: bold;
+    height: 18px;
+    line-height: 18px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    text-align: center;
+    margin: 0 2px;
+
+    border: solid;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-color: #ddd;
+}
+
+div[id="bedrock-database-display-list"] {
+    overflow-y: scroll;
+    height: calc(100% - 26px);
+}
+
+.bedrock-database-line {
+    padding: 4px;
+    color: black;
+    font-size: 10px;
+    height: 64px;
+}
+
+.bedrock-database-entry {
+    display: inline-block;
+    height: 100%;
+}
+
+.bedrock-database-entry-text {
+    height: calc(100% - 8px);
+    line-height: 14px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    margin: 0 2px;
+    padding: 0 3px;
+}
+
+.date{
+    width: 100px;
+    text-align: center;
+}
+
+.width {
+    width: 40px;
+    text-align: center;
+}
+
+.height {
+    width: 40px;
+    text-align: center;
+}
+
+.thumbnail {
+    max-height: 100%;
+}
+
+.rotate90CW {
+    transform: rotate(90deg);
+}
+
+.rotate180 {
+    transform: rotate(180deg);
+}
+
+.rotate270CW {
+    transform: rotate(270deg);
+}
+
+.size{
+    width: 50px;
+    text-align: center;
+}
+
+.type{
+    width: 40px;
+    text-align: center;
+}
+
+.name {
+    width: 100px;
+}
+
+.file {
+    width: 100px;
+}
+
+.make{
+    width: 80px;
+    text-align: center;
+}
+
+.model{
+    width: 60px;
+    text-align: center;
+}
+
+.exp{
+    width: 50px;
+    text-align: center;
+}
+
+.f-stop{
+    width: 40px;
+    text-align: center;
+}
+
+.iso{
+    width: 40px;
+    text-align: center;
+}
