@@ -6,7 +6,7 @@ let makeStyleNameFromColumnName = function (name) {
 let Http = Bedrock.Http;
 let Html = Bedrock.Html;
 let now = new Date ().getTime ();
-Http.get ("images-subset.json?" + now, function (transactions) {
+Http.get ("images-subset.json?" + now, function (records) {
     console.log ("loaded images");
 
     let fieldsAs = {
@@ -24,35 +24,53 @@ Http.get ("images-subset.json?" + now, function (transactions) {
 
     // identify all the fields, and make a few adjustments
     let fields = Object.create (null);
-    for (let transaction of transactions) {
-        let keys = Object.keys(transaction);
+    for (let record of records) {
+        let keys = Object.keys(record);
         for (let key of keys) {
             if (key in fieldsAs) {
                 let replaceKey = fieldsAs[key];
-                transaction[replaceKey] = transaction[key];
-                delete transaction[key];
+                record[replaceKey] = record[key];
+                delete record[key];
                 key = replaceKey;
             }
             fields[key] = key;
         }
 
-        // now extract a date of some sort: GPSDateTime,SubSecCreateDate,CreateDate
-        if ("GPSDateTime" in record) {
-            record["Date"] = record["GPSDateTime"];
-        } else if("SubSecCreateDate" in record) {
-            record["Date"] = record["SubSecCreateDate"];
-        } else if("CreateDate" in record) {
-            record["Date"] = record["CreateDate"];
+        // now extract a date of some sort based on options (in order of preference)
+        let dateOptions = ["GPSDateTime","SubSecCreateDate","CreateDate","ModifyDate"];
+        let dateTime;
+        for (let dateOption of dateOptions) {
+            if (dateOption in record) {
+                dateTime = record[dateOption];//.replace(/z$/i, "");
+                break;
+            }
+        }
+        if (typeof (dateTime) === "undefined") {
+            // try to set a date from the directory name
+            let d = record["Directory"].split ("/")[4].split("-");
+            if (d.length == 2) {
+                let t = d[1];
+                d = d[0];
+                if ((d.length == 8) && (t.length == 6)) {
+                    dateTime = d.substr(0, 4) + ":" + d.substr(4, 2) + ":" + d.substr(6, 2);
+                    dateTime += " " + t.substr(0, 2) + ":" + t.substr(2, 2) + ":" + t.substr(4, 2) + "Z";
+                }
+            }
+        }
+        if (typeof (dateTime) !== "undefined") {
+            dateTime = dateTime.split (" ");
+            record["Date"] = dateTime[0].replace (/:/g, "/");
+            record["Time"] = dateTime[1];
         } else {
-            console.log("No date found for " + record["Directory"] + record["Name"]);
+            console.log("No date found for " + record["Directory"] + "/" + record["Name"]);
         }
     }
 
-    transactions = SimpleDatabase.sort (transactions, [ { name:"Date", type:"string", asc:true }, { name: "Name", type:"string", asc:true } ]);
+    records = SimpleDatabase.sort (records, [ { name:"Date", type:"string", asc:true },  { name:"Time", type:"string", asc:true }, { name: "Width", type:"number", asc:true }, { name: "Height", type:"number", asc:true }, { name: "Size", type:"string", asc:true }, { name: "Name", type:"string", asc:true } ]);
 
     // add a header row from the fields
     let fieldKeys = Object.keys (fields).sort();
-    fieldKeys = [ "Date","Width","Height","Size","Type","Name","Make","Model","Exp","f-stop","ISO" ];
+    fieldKeys = [ "Date","Time","Width","Height","Size","Type","Name","Make","Model","Exp","f-stop","ISO" ];
 
     // add the header to the display
     let bedrockDatabaseDisplay = document.getElementById ("bedrock-database-display");
@@ -135,7 +153,7 @@ Http.get ("images-subset.json?" + now, function (transactions) {
                 // add a file link
                 let entryElement = Html.addElement (lineElement, "div", { class: "bedrock-database-entry" });
                 let linkDivElement = Html.addElement (entryElement, "div", { classes: ["file", "bedrock-database-entry-text"] });
-                let fileName = record["File"].substr (2);
+                let fileName = record["Directory"].substr (2) + "/" + record["Name"];
                 let linkElement = Html.addElement (linkDivElement, "a", { href: "/photosdb-images/Masters/" + fileName });
                 let thumbnailFileName = "/photosdb-images/Thumbnails/" + fileName;
                 if ("Orientation" in record) {
@@ -164,7 +182,7 @@ Http.get ("images-subset.json?" + now, function (transactions) {
 
     // build the database filter
     Bedrock.Database.Container.new ({
-        database: transactions,
+        database: records,
         filterValues: [{ "field": "Type" }],
         onUpdate: function (db) {
             // reset everything
