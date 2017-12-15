@@ -157,7 +157,7 @@ Http.get ("images-subset.json?" + now, function (records) {
     Bedrock.Database.Container.new ({
         database: records,
         onUpdate: function (db) {
-            Bedrock.PagedDisplay.makeTable (bedrockDatabaseDisplayList, db, fields);
+            Bedrock.PagedDisplay.makeTable (bedrockDatabaseDisplayList, db, fieldKeys);
 
             // save the result as a CSV file
             /*
